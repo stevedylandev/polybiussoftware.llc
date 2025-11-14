@@ -122,15 +122,15 @@ export function formatStats(stats: Record<string, string>): string {
 	const boxWidth = Math.max(contentWidth, headerText.length + 4);
 
 	const lines: string[] = [];
-	lines.push(`         ╭${"─".repeat(boxWidth)}╮`);
+	lines.push(`     ╭${"─".repeat(boxWidth)}╮`);
 
 	// Center the header
 	const headerPadding = Math.floor((boxWidth - headerText.length) / 2);
 	const headerRightPadding = boxWidth - headerPadding - headerText.length;
 	lines.push(
-		`         │${" ".repeat(headerPadding)}${headerText}${" ".repeat(headerRightPadding)}│`,
+		`     │${" ".repeat(headerPadding)}${headerText}${" ".repeat(headerRightPadding)}│`,
 	);
-	lines.push(`         ├${"─".repeat(boxWidth)}┤`);
+	lines.push(`     ├${"─".repeat(boxWidth)}┤`);
 
 	// Add stats rows
 	for (const [key, value] of Object.entries(stats)) {
@@ -139,10 +139,10 @@ export function formatStats(stats: Record<string, string>): string {
 		const paddedValue = value.padEnd(maxValueLength);
 		const content = `  ${paddedLabel} : ${paddedValue}  `;
 		const rightPadding = boxWidth - content.length;
-		lines.push(`         │${content}${" ".repeat(rightPadding)}│`);
+		lines.push(`     │${content}${" ".repeat(rightPadding)}│`);
 	}
 
-	lines.push(`         ╰${"─".repeat(boxWidth)}╯`);
+	lines.push(`     ╰${"─".repeat(boxWidth)}╯`);
 
 	return lines.join("\n");
 }

@@ -9,7 +9,6 @@ app.get("/", async (c) => {
 	const statsBox = formatStats(stats);
 	const fullContent = `${txt}\n\n${statsBox}\n`;
 	const userAgent = c.req.header("User-Agent") || "";
-	console.log(userAgent);
 	const isCrawler = /bot/i.test(userAgent);
 
 	if (isCrawler) {
