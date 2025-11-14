@@ -7,6 +7,7 @@ export async function getSystemStats() {
 		// OS Name
 		const osName = await $`uname -s`.text();
 		stats.os = osName.trim();
+		const isLinux = stats.os === "Linux";
 
 		// OS Version
 		const osVersion = await $`uname -r`.text();
@@ -17,35 +18,65 @@ export async function getSystemStats() {
 		stats.arch = arch.trim();
 
 		// Uptime
-		const uptimeSeconds = await $`sysctl -n kern.boottime`.text();
-		const bootMatch = uptimeSeconds.match(/sec = (\d+)/);
-		if (bootMatch) {
-			const bootTime = Number.parseInt(bootMatch[1]);
-			const now = Math.floor(Date.now() / 1000);
-			const uptime = now - bootTime;
-			const days = Math.floor(uptime / 86400);
-			const hours = Math.floor((uptime % 86400) / 3600);
-			const minutes = Math.floor((uptime % 3600) / 60);
+		if (isLinux) {
+			const uptimeData = await $`cat /proc/uptime`.text();
+			const uptimeSeconds = Math.floor(
+				Number.parseFloat(uptimeData.split(" ")[0]),
+			);
+			const days = Math.floor(uptimeSeconds / 86400);
+			const hours = Math.floor((uptimeSeconds % 86400) / 3600);
+			const minutes = Math.floor((uptimeSeconds % 3600) / 60);
 			stats.uptime = `${days}d ${hours}h ${minutes}m`;
+		} else {
+			const uptimeSeconds = await $`sysctl -n kern.boottime`.text();
+			const bootMatch = uptimeSeconds.match(/sec = (\d+)/);
+			if (bootMatch) {
+				const bootTime = Number.parseInt(bootMatch[1]);
+				const now = Math.floor(Date.now() / 1000);
+				const uptime = now - bootTime;
+				const days = Math.floor(uptime / 86400);
+				const hours = Math.floor((uptime % 86400) / 3600);
+				const minutes = Math.floor((uptime % 3600) / 60);
+				stats.uptime = `${days}d ${hours}h ${minutes}m`;
+			}
 		}
 
 		// CPU Info
-		const cpuBrand = await $`sysctl -n machdep.cpu.brand_string`.text();
-		stats.cpu = cpuBrand.trim();
+		if (isLinux) {
+			const cpuInfo = await $`grep "model name" /proc/cpuinfo`.text();
+			const firstCpu = cpuInfo.split("\n")[0];
+			const cpuBrand = firstCpu.split(":")[1]?.trim() || "Unknown";
+			stats.cpu = cpuBrand;
+		} else {
+			const cpuBrand = await $`sysctl -n machdep.cpu.brand_string`.text();
+			stats.cpu = cpuBrand.trim();
+		}
 
 		// CPU Cores
-		const cpuCores = await $`sysctl -n hw.ncpu`.text();
-		stats.cores = cpuCores.trim();
+		if (isLinux) {
+			const cpuCores = await $`nproc`.text();
+			stats.cores = cpuCores.trim();
+		} else {
+			const cpuCores = await $`sysctl -n hw.ncpu`.text();
+			stats.cores = cpuCores.trim();
+		}
 
 		// Memory
-		const memBytes = await $`sysctl -n hw.memsize`.text();
-		const memGB = (
-			Number.parseInt(memBytes.trim()) /
-			1024 /
-			1024 /
-			1024
-		).toFixed(1);
-		stats.memory = `${memGB} GB`;
+		if (isLinux) {
+			const memInfo = await $`grep MemTotal /proc/meminfo`.text();
+			const memKB = Number.parseInt(memInfo.split(/\s+/)[1]);
+			const memGB = (memKB / 1024 / 1024).toFixed(1);
+			stats.memory = `${memGB} GB`;
+		} else {
+			const memBytes = await $`sysctl -n hw.memsize`.text();
+			const memGB = (
+				Number.parseInt(memBytes.trim()) /
+				1024 /
+				1024 /
+				1024
+			).toFixed(1);
+			stats.memory = `${memGB} GB`;
+		}
 
 		// Shell
 		const shell = process.env.SHELL || "unknown";
