@@ -1,9 +1,13 @@
 import { Hono } from "hono";
+import { getSystemStats, formatStats } from "./stats";
 
 const app = new Hono();
 
 app.get("/", async (c) => {
 	const txt = await Bun.file("./src/site.txt").text();
+	const stats = await getSystemStats();
+	const statsBox = formatStats(stats);
+	const fullContent = `${txt}\n\n${statsBox}\n`;
 	const userAgent = c.req.header("User-Agent") || "";
 	console.log(userAgent);
 	const isCrawler = /bot/i.test(userAgent);
@@ -28,13 +32,13 @@ app.get("/", async (c) => {
 <meta name="twitter:image" content="/og.png">
 </head>
 <body>
-${txt}
+${fullContent}
 </body>
 </html>
 `);
 	}
 
-	return c.text(txt);
+	return c.text(fullContent);
 });
 
 app.get("/og.png", async (c) => {
@@ -46,4 +50,7 @@ app.get("/og.png", async (c) => {
 	});
 });
 
-export default app;
+export default {
+	port: 4321,
+	fetch: app.fetch,
+};
