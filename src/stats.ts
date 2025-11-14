@@ -45,7 +45,12 @@ export async function getSystemStats() {
 		if (isLinux) {
 			const cpuInfo = await $`grep "model name" /proc/cpuinfo`.text();
 			const firstCpu = cpuInfo.split("\n")[0];
-			const cpuBrand = firstCpu.split(":")[1]?.trim() || "Unknown";
+			let cpuBrand = firstCpu.split(":")[1]?.trim() || "Unknown";
+			// Shorten common CPU names
+			cpuBrand = cpuBrand.replace(/ w\/ Radeon.*$/i, ""); // Remove Radeon graphics info
+			cpuBrand = cpuBrand.replace(/ with Radeon.*$/i, "");
+			cpuBrand = cpuBrand.replace(/\(TM\)/g, "").replace(/\(R\)/g, ""); // Remove trademark symbols
+			cpuBrand = cpuBrand.replace(/\s+/g, " ").trim(); // Clean up extra spaces
 			stats.cpu = cpuBrand;
 		} else {
 			const cpuBrand = await $`sysctl -n machdep.cpu.brand_string`.text();
