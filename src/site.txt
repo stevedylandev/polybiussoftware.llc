@@ -27,6 +27,8 @@
 
      ╭──────────────────────────────────╮
      │                                  │
+     │    Steve Simkins | DX Engineer   │
+     │                                  │
      │    steve@polybiussoftware.llc    │
      │                                  │
      │    polybiussoftware.eth          │
